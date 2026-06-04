@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="dotnet-tools.json" />
+  </Folder>
+  <Folder Name="/src/" />
+  <Folder Name="/src/App/" />
+  <Folder Name="/src/App/DesktopGL/">
+    <Project Path="src/App/DesktopGL/App.DesktopGL/App.DesktopGL.csproj" Id="a2c599b5-8685-4a80-b2ae-f4081dec4f4c" />
+  </Folder>
+</Solution>
