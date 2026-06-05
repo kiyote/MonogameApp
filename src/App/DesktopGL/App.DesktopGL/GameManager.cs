@@ -1,6 +1,5 @@
 ﻿using App.DesktopGL.Scenes.Main;
 using Base.Core.StateMachines;
-using MonoGame.Extended.Screens;
 
 namespace App.DesktopGL;
 
@@ -12,14 +11,12 @@ internal class GameManager {
 	}
 
 	private readonly SimpleStateMachine<AppState> _state;
-	private readonly ScreenManager _screenManager;
+
 	private readonly MainScreen _mainScreen;
 
 	public GameManager(
-		ScreenManager screenManager,
 		MainScreen mainScreen
 	) {
-		_screenManager = screenManager;
 		_mainScreen = mainScreen;
 		_state = new SimpleStateMachine<AppState>(
 			new SimpleStateMachine<AppState>.Config(
@@ -29,8 +26,8 @@ internal class GameManager {
 				[
 					new SimpleStateMachine<AppState>.StateMethods(
 						AppState.MainMenu,
-						() => _screenManager.ReplaceScreen( _mainScreen ),
-						() => {}
+						() => { _mainScreen.Show(); },
+						() => { _mainScreen.Hide(); }
 					)
 				]
 			)

@@ -3,24 +3,24 @@ using System.Collections.Generic;
 using System.Globalization;
 using App.DesktopGL.Localization;
 using App.DesktopGL.Scenes;
+using Gum.Forms.Controls;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGame.Extended.Screens;
+using MonoGameGum;
 
 namespace App.DesktopGL;
 
 internal class MonoManager : Game, IGameTerminator {
 	private readonly GraphicsDeviceManager _graphicsDeviceManager;
-	private readonly ScreenManager _screenManager;
 	private readonly IConfiguration _configuration;
 	private ServiceProvider _services = default!;
 
 	public MonoManager(
 		IConfiguration configuration
 	) {
-		_configuration = configuration;		
+		_configuration = configuration;
 
 		DisplayOptions opts = new DisplayOptions();
 		configuration.GetSection( DisplayOptions.Section ).Bind( opts );
@@ -32,8 +32,6 @@ internal class MonoManager : Game, IGameTerminator {
 			PreferredBackBufferFormat = SurfaceFormat.Color,
 		};
 
-		_screenManager = new ScreenManager();
-		Components.Add( _screenManager );
 		Content.RootDirectory = "Content";
 	}
 
@@ -42,10 +40,9 @@ internal class MonoManager : Game, IGameTerminator {
 		IServiceCollection services = new ServiceCollection();
 		services.AddSingleton( GraphicsDevice );
 		services.AddSingleton( Content );
+		services.AddSingleton<Game>( this );
 		services.AddSingleton<IGameTerminator>( this );
 		services.AddSingleton( _configuration );
-		services.AddSingleton( _screenManager );
-		services.AddSingleton<SpriteBatch>();
 		services.AddSingleton<GameManager>();
 		services.Configure<DisplayOptions>( _configuration.GetSection( DisplayOptions.Section ) );
 		services.AddScenes();
@@ -56,6 +53,9 @@ internal class MonoManager : Game, IGameTerminator {
 		Window.AllowUserResizing = true;
 		Window.ClientSizeChanged += OnWindowResize;
 		IsMouseVisible = true;
+		GumService.Default.Initialize( this );
+		GumService.Default.EnableExpandToWindow();
+		FrameworkElement.KeyboardsForUiControl.Add( GumService.Default.Keyboard );
 
 		base.Initialize();
 
@@ -75,10 +75,18 @@ internal class MonoManager : Game, IGameTerminator {
 		app.Start();
 	}
 
+	protected override void Update(
+		GameTime gameTime
+	) {
+		GumService.Default.Update( gameTime );
+		base.Update( gameTime );
+	}
+
 	protected override void Draw(
 		GameTime gameTime
 	) {
-		GraphicsDevice.Clear( Color.Black );
+		GraphicsDevice.Clear( Color.DarkSlateBlue );
+		GumService.Default.Draw();
 		base.Draw( gameTime );
 	}
 
@@ -88,19 +96,12 @@ internal class MonoManager : Game, IGameTerminator {
 	) {
 		Window.ClientSizeChanged -= OnWindowResize;
 
-		int minWidth = 800;
-		int minHeight = 600;
+		int targetWidth = Math.Max( 960, Window.ClientBounds.Width );
+		int targetHeight = Math.Max( 540, Window.ClientBounds.Height );
 
-		int targetWidth = Window.ClientBounds.Width;
-		int targetHeight = Window.ClientBounds.Height;
-
-		if( targetWidth < minWidth
-			|| targetHeight < minHeight
-		) {
-			_graphicsDeviceManager.PreferredBackBufferWidth = targetWidth;
-			_graphicsDeviceManager.PreferredBackBufferHeight = targetHeight;
-			_graphicsDeviceManager.ApplyChanges();
-		}
+		_graphicsDeviceManager.PreferredBackBufferWidth = targetWidth;
+		_graphicsDeviceManager.PreferredBackBufferHeight = targetHeight;
+		_graphicsDeviceManager.ApplyChanges();
 
 		Window.ClientSizeChanged += OnWindowResize;
 	}
